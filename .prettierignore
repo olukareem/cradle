@@ -1,0 +1,8 @@
+node_modules
+.next
+.vercel
+coverage
+build
+out
+package-lock.json
+lib/types/database.ts
