@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Hash, Plus } from 'lucide-react'
+import { Hash, Plus, Compass } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRoomsStore } from '@/lib/stores/rooms'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { UnreadTracker } from '@/components/shell/UnreadTracker'
+import { BrowseRoomsDialog } from '@/components/rooms/BrowseRoomsDialog'
 import { cn } from '@/lib/utils/cn'
 import { CreateRoomDialog } from '@/components/rooms/CreateRoomDialog'
 import type { Database } from '@/lib/types/database'
@@ -20,8 +22,15 @@ interface SidebarContentProps {
 
 export function SidebarContent({ initialRooms }: SidebarContentProps) {
   const pathname = usePathname()
-  const { joinedRooms, setJoinedRooms, unreadCounts } = useRoomsStore()
+  const { joinedRooms, setJoinedRooms, setActiveRoom, unreadCounts } = useRoomsStore()
   const [createOpen, setCreateOpen] = useState(false)
+  const [browseOpen, setBrowseOpen] = useState(false)
+
+  // Keep activeRoomId in sync with the current path
+  useEffect(() => {
+    const match = pathname.match(/^\/rooms\/([^/]+)/)
+    setActiveRoom(match ? match[1]! : null)
+  }, [pathname, setActiveRoom])
 
   // Hydrate store from server-fetched data on first render
   useEffect(() => {
@@ -58,18 +67,31 @@ export function SidebarContent({ initialRooms }: SidebarContentProps) {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-y-auto">
+      <UnreadTracker />
+
       {/* App header */}
       <div className="flex h-12 items-center justify-between px-4 border-b border-border shrink-0">
         <span className="font-semibold text-text">Cradle</span>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setCreateOpen(true)}
-          title="Create room"
-          className="h-7 w-7 text-text-faint hover:text-text"
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setBrowseOpen(true)}
+            title="Browse rooms"
+            className="h-7 w-7 text-text-faint hover:text-text"
+          >
+            <Compass className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setCreateOpen(true)}
+            title="Create room"
+            className="h-7 w-7 text-text-faint hover:text-text"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Rooms list */}
@@ -110,6 +132,7 @@ export function SidebarContent({ initialRooms }: SidebarContentProps) {
       </nav>
 
       <CreateRoomDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <BrowseRoomsDialog open={browseOpen} onOpenChange={setBrowseOpen} />
     </div>
   )
 }

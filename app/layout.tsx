@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import { ToastProvider } from '@/components/ui/toast'
+import { ConnectionBanner } from '@/components/shell/ConnectionBanner'
 import './globals.css'
 
 const inter = Inter({
@@ -23,7 +25,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} h-full`}>
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        <ToastProvider>
+          <ConnectionBanner />
+          {children}
+        </ToastProvider>
+      </body>
     </html>
   )
 }

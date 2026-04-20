@@ -4,6 +4,7 @@ import { useState, useRef, useTransition } from 'react'
 import { SendHorizonal } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useSessionStore } from '@/lib/stores/session'
+import { usePresenceContext } from '@/components/presence/PresenceProvider'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils/cn'
 
@@ -18,6 +19,7 @@ export function MessageInput({ roomId }: MessageInputProps) {
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const { user } = useSessionStore()
+  const { setTyping } = usePresenceContext()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const charCount = value.length
@@ -41,6 +43,7 @@ export function MessageInput({ roomId }: MessageInputProps) {
         .from('messages')
         .insert({ room_id: roomId, user_id: user.id, content })
 
+      setTyping(false)
       if (error) {
         setError(error.message)
       } else {
@@ -78,7 +81,9 @@ export function MessageInput({ roomId }: MessageInputProps) {
           onChange={(e) => {
             setValue(e.target.value)
             autoResize()
+            setTyping(e.target.value.length > 0)
           }}
+          onBlur={() => setTyping(false)}
           onKeyDown={handleKeyDown}
           disabled={isPending}
         />

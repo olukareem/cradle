@@ -1,36 +1,136 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cradle
 
-## Getting Started
+Real-time chat, built to hold conversations.
 
-First, run the development server:
+---
+
+## Stack
+
+| Layer | Tech |
+|---|---|
+| Framework | Next.js 16 (App Router, TypeScript strict) |
+| Styling | Tailwind CSS v4 |
+| Backend | Supabase (Postgres, Auth, Realtime, Presence) |
+| Client state | Zustand |
+| UI primitives | Radix UI + CVA |
+
+---
+
+## Local setup
+
+### 1. Prerequisites
+
+- Node 20+
+- A [Supabase](https://supabase.com) project (free tier is fine)
+- [Supabase CLI](https://supabase.com/docs/guides/cli) installed globally
+
+### 2. Clone and install
+
+```bash
+git clone <repo-url>
+cd cradle
+npm install
+```
+
+### 3. Environment variables
+
+Copy `.env.local.example` to `.env.local` and fill in your project values:
+
+```bash
+cp .env.local.example .env.local
+```
+
+| Variable | Where to find it |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Project Settings → API → Project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Project Settings → API → anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Project Settings → API → service_role key (never expose this client-side) |
+
+### 4. Push the database schema
+
+```bash
+npx supabase link --project-ref YOUR_PROJECT_REF
+npx supabase db push
+```
+
+This applies four migrations:
+
+| Migration | Purpose |
+|---|---|
+| `0001_init.sql` | Tables: profiles, rooms, room_members, messages |
+| `0002_rls.sql` | Row Level Security policies |
+| `0003_triggers.sql` | Auto-create profile on signup |
+| `0004_realtime.sql` | Enable realtime on messages + room_members |
+
+### 5. Run the dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). You will be redirected to `/sign-in` since no session exists yet.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Features
 
-## Learn More
+- **Auth** — email/password sign-up and sign-in, magic-link via Supabase Auth
+- **Rooms** — create, browse public rooms, join, leave; private-room support
+- **Messaging** — realtime via Supabase `postgres_changes`; infinite scroll up for history
+- **Typing indicators** — Supabase Presence channel; debounced, auto-clears after 3 s idle
+- **Online presence** — right rail shows all users currently in the room
+- **Edit/delete** — inline edit with Enter/Esc; soft-delete (message placeholder preserved)
+- **Unread counts** — per-room badge driven by `last_read_at` cursor; clears on focus
+- **Connection banner** — offline state detected via browser events
+- **Dark theme** — single Inter font, Discord-inspired three-pane layout
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Commands
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run dev          # local dev server
+npm run build        # production build
+npm run typecheck    # tsc --noEmit (must be zero errors)
+npm run lint         # eslint
+npm run format       # prettier --write .
+```
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deploy
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Vercel + Supabase Cloud
+
+1. Push the repo to GitHub.
+2. Import in [Vercel](https://vercel.com/new).
+3. Add the three env vars from `.env.local` in Vercel project settings.
+4. Deploy. Vercel auto-detects Next.js; no extra config needed.
+
+---
+
+## Project structure
+
+```
+app/
+  (auth)/           Sign-in + sign-up pages (no shell)
+  (app)/            Authenticated shell: rooms, messages
+  auth/             Route handlers: magic-link callback, sign-out
+components/
+  auth/             SignInForm, SignUpForm
+  chat/             MessageList, MessageItem, MessageInput, TypingIndicator
+  presence/         PresenceProvider, MembersPanel
+  rooms/            SidebarContent, RoomView, CreateRoomDialog, BrowseRoomsDialog
+  shell/            AppShell, SessionProvider, UserProfileCorner, ConnectionBanner
+  ui/               Button, Input, Label, Badge, Toast
+lib/
+  db/               Server-side typed queries (messages, rooms)
+  realtime/         usePresence, useUnread hooks
+  stores/           Zustand: session, rooms, ui
+  supabase/         client.ts, server.ts, proxy.ts
+  types/            database.ts (generated from schema)
+  utils/            cn, groupMessages, time helpers
+supabase/
+  migrations/       SQL migrations 0001-0004
+proxy.ts            Next 16 session-refresh proxy + auth redirect
+```

@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation'
 import { Hash, LogOut } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useSessionStore } from '@/lib/stores/session'
+import { PresenceProvider, usePresenceContext } from '@/components/presence/PresenceProvider'
 import { MessageList } from '@/components/chat/MessageList'
 import { MessageInput } from '@/components/chat/MessageInput'
+import { TypingIndicator } from '@/components/chat/TypingIndicator'
 import { Button } from '@/components/ui/button'
 import type { Database } from '@/lib/types/database'
 import type { MessageWithProfile } from '@/lib/utils/groupMessages'
@@ -21,9 +23,13 @@ interface RoomViewProps {
   oldestCreatedAt: string | null
 }
 
-export function RoomView({ room, isMember, initialMessages, oldestCreatedAt }: RoomViewProps) {
+/**
+ * Inner component — lives inside PresenceProvider so hooks can call usePresenceContext()
+ */
+function RoomViewInner({ room, userId, isMember, initialMessages, oldestCreatedAt }: RoomViewProps) {
   const router = useRouter()
   const { user } = useSessionStore()
+  const { onlineUsers } = usePresenceContext()
   const [isPending, startTransition] = useTransition()
 
   function handleJoin() {
@@ -61,12 +67,16 @@ export function RoomView({ room, isMember, initialMessages, oldestCreatedAt }: R
             <span className="text-sm text-text-muted truncate">{room.description}</span>
           </>
         )}
-        {/* Leave button */}
+        {isMember && (
+          <span className="ml-auto mr-2 shrink-0 text-xs text-text-faint">
+            {onlineUsers.length} online
+          </span>
+        )}
         {isMember && (
           <Button
             variant="ghost"
             size="sm"
-            className="ml-auto shrink-0 text-text-faint hover:text-danger"
+            className="shrink-0 text-text-faint hover:text-danger"
             onClick={handleLeave}
             disabled={isPending}
             title="Leave room"
@@ -76,7 +86,6 @@ export function RoomView({ room, isMember, initialMessages, oldestCreatedAt }: R
         )}
       </header>
 
-      {/* Not a member — join prompt */}
       {!isMember ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center px-6">
           <p className="text-sm text-text-muted">You are not a member of this room.</p>
@@ -91,9 +100,25 @@ export function RoomView({ room, isMember, initialMessages, oldestCreatedAt }: R
             initialMessages={initialMessages}
             oldestCreatedAt={oldestCreatedAt}
           />
+          <TypingIndicator typingUsers={onlineUsers} currentUserId={userId} />
           <MessageInput roomId={room.id} />
         </>
       )}
     </div>
+  )
+}
+
+export function RoomView(props: RoomViewProps) {
+  const { user, profile } = useSessionStore()
+
+  // Presence requires userId/username — fall back gracefully if not yet hydrated
+  const userId = props.userId
+  const username = profile?.username ?? user?.email ?? userId
+  const avatarUrl = profile?.avatar_url ?? null
+
+  return (
+    <PresenceProvider roomId={props.room.id} userId={userId} username={username} avatarUrl={avatarUrl}>
+      <RoomViewInner {...props} />
+    </PresenceProvider>
   )
 }
