@@ -5,9 +5,10 @@
  */
 import { createClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL = 'https://cwpabnehcjfgythyqcqb.supabase.co'
-const ANON_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3cGFibmVoY2pmZ3l0aHlxY3FiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2Mjc2MzgsImV4cCI6MjA5MjIwMzYzOH0.afGPmroG2BePZl8DNWn5bXUs-Ms44Lv0r68TaIkK14s'
+// Run with: node --env-file=.env.local scripts/realtime-test.mjs
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+if (!SUPABASE_URL || !ANON_KEY) throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY')
 const ROOM_ID = 'a255098f-906e-43dd-9fde-6c6e619fa03e'
 
 const G = '\x1b[32m', R = '\x1b[31m', Y = '\x1b[33m', C = '\x1b[36m', Z = '\x1b[0m'
