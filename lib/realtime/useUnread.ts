@@ -24,6 +24,14 @@ export function useUnread(joinedRoomIds: string[]) {
 
     async function fetchCounts() {
       for (const roomId of joinedRoomIds) {
+        // The room the user is actively viewing is always 0 — markRead handles it.
+        // This guard prevents a race where fetchCounts reads a stale last_read_at
+        // before markRead's UPDATE has committed to Supabase.
+        if (roomId === useRoomsStore.getState().activeRoomId) {
+          clearUnread(roomId)
+          continue
+        }
+
         // Fetch last_read_at first, then use it as the cursor for counting newer messages
         const memberRes = await supabase
           .from('room_members')
@@ -47,7 +55,7 @@ export function useUnread(joinedRoomIds: string[]) {
     }
 
     fetchCounts()
-  }, [user, joinedRoomIds, setUnreadCount])
+  }, [user, joinedRoomIds, setUnreadCount, clearUnread])
 
   // Listen for new messages across all joined rooms and bump unread counts
   useEffect(() => {

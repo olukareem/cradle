@@ -1,11 +1,14 @@
 'use client'
 
 import { Users } from 'lucide-react'
-import { usePresenceContext } from '@/components/presence/PresenceProvider'
+import { useUiStore } from '@/lib/stores/ui'
 import { cn } from '@/lib/utils/cn'
 
 export function MembersPanel() {
-  const { onlineUsers } = usePresenceContext()
+  // Read presence state from Zustand — PresenceProvider writes here from within
+  // RoomView, but MembersPanel lives in the layout rail (outside that subtree).
+  // Zustand is the cross-tree bridge.
+  const onlineUsers = useUiStore((s) => s.onlineUsers)
 
   return (
     <div className="flex flex-col h-full p-3 gap-2 min-w-0 overflow-y-auto">

@@ -1,14 +1,18 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { LogOut, User } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { useSessionStore } from '@/lib/stores/session'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils/cn'
 
-export function UserProfileCorner() {
-  const { user, profile } = useSessionStore()
+interface UserProfileCornerProps {
+  /** Server-rendered values passed directly from the RSC layout — no hydration flash. */
+  username: string
+  avatarUrl: string | null
+}
+
+export function UserProfileCorner({ username, avatarUrl }: UserProfileCornerProps) {
   const router = useRouter()
 
   async function handleSignOut() {
@@ -18,11 +22,10 @@ export function UserProfileCorner() {
     router.refresh()
   }
 
-  const initials = profile?.username?.slice(0, 2).toUpperCase() ?? user?.email?.slice(0, 2).toUpperCase() ?? '??'
-  const displayName = profile?.username ?? user?.email ?? 'Unknown'
+  const initials = username.slice(0, 2).toUpperCase()
 
   return (
-    <div className="flex items-center gap-2 p-3 border-t border-border">
+    <div className="flex items-center gap-2 p-3 border-t border-border shrink-0">
       {/* Avatar */}
       <div
         className={cn(
@@ -30,11 +33,11 @@ export function UserProfileCorner() {
           'bg-accent-muted text-accent text-xs font-semibold select-none',
         )}
       >
-        {profile?.avatar_url ? (
+        {avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={profile.avatar_url}
-            alt={displayName}
+            src={avatarUrl}
+            alt={username}
             className="h-8 w-8 rounded-full object-cover"
           />
         ) : (
@@ -43,7 +46,7 @@ export function UserProfileCorner() {
       </div>
 
       {/* Name */}
-      <span className="flex-1 truncate text-sm font-medium text-text">{displayName}</span>
+      <span className="flex-1 truncate text-sm font-medium text-text">{username}</span>
 
       {/* Sign out */}
       <Button

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useUiStore } from '@/lib/stores/ui'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
 export interface PresenceUser {
@@ -31,7 +32,10 @@ export function usePresence(roomId: string, userId: string, username: string, av
     // Deduplicate by userId — take the most recent presence per user
     const byUser = new Map<string, PresenceUser>()
     for (const u of users) byUser.set(u.userId, u)
-    setOnlineUsers(Array.from(byUser.values()))
+    const deduped = Array.from(byUser.values())
+    setOnlineUsers(deduped)
+    // Mirror into Zustand so MembersPanel (outside PresenceProvider tree) can read it
+    useUiStore.getState().setOnlineUsers(deduped)
   }
 
   useEffect(() => {
@@ -60,6 +64,8 @@ export function usePresence(roomId: string, userId: string, username: string, av
 
     return () => {
       supabase.removeChannel(channel)
+      // Clear the Zustand mirror when leaving the room
+      useUiStore.getState().setOnlineUsers([])
     }
   }, [roomId, userId, username, avatarUrl])
 

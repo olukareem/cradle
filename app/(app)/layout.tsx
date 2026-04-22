@@ -29,13 +29,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const joinedRooms =
     roomsResult.data?.flatMap((m) => (m.rooms ? [m.rooms] : [])) ?? []
 
+  const displayName = profile?.username ?? user.email ?? 'unknown'
+  const avatarUrl = profile?.avatar_url ?? null
+
   return (
     <SessionProvider user={user} profile={profile}>
       <AppShell
         sidebar={
           <>
             <SidebarContent initialRooms={joinedRooms} />
-            <UserProfileCorner />
+            <UserProfileCorner username={displayName} avatarUrl={avatarUrl} />
           </>
         }
         main={children}

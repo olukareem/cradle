@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import * as Dialog from '@radix-ui/react-dialog'
-import { X, Hash, Users } from 'lucide-react'
+import { X, Hash } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useSessionStore } from '@/lib/stores/session'
 import { useRoomsStore } from '@/lib/stores/rooms'

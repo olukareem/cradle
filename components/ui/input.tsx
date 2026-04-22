@@ -1,7 +1,9 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils/cn'
 
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+// Using a type alias avoids the "no-empty-object-type" lint error while keeping
+// the same public API for consumers.
+export type InputProps = React.InputHTMLAttributes<HTMLInputElement>
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, ...props }, ref) => {

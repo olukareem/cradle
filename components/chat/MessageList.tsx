@@ -175,7 +175,7 @@ export function MessageList({ roomId, initialMessages, oldestCreatedAt }: Messag
           </div>
         )}
 
-        {groups.map((group, gi) => (
+        {groups.map((group) => (
           <div key={group.leadMessage.id}>
             {/* Day separator */}
             {group.showDaySeparator && (

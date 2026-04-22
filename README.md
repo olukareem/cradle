@@ -53,7 +53,7 @@ npx supabase link --project-ref YOUR_PROJECT_REF
 npx supabase db push
 ```
 
-This applies four migrations:
+This applies five migrations:
 
 | Migration | Purpose |
 |---|---|
@@ -61,6 +61,7 @@ This applies four migrations:
 | `0002_rls.sql` | Row Level Security policies |
 | `0003_triggers.sql` | Auto-create profile on signup |
 | `0004_realtime.sql` | Enable realtime on messages + room_members |
+| `0005_fix_rls_recursion.sql` | Breaks a recursive `room_members` SELECT policy; renames the soft-delete UPDATE policy |
 
 ### 5. Run the dev server
 
@@ -95,6 +96,31 @@ npm run typecheck    # tsc --noEmit (must be zero errors)
 npm run lint         # eslint
 npm run format       # prettier --write .
 ```
+
+---
+
+## Verification
+
+Before shipping, the repo includes two protocol-level end-to-end tests that run
+against a live Supabase project — no browser required. Both scripts require
+valid user accounts (`alice@example.com`, `bob@example.com`) seeded via the
+Supabase Admin API, and both use hardcoded test-only passwords (safe to change).
+
+```bash
+# Realtime: INSERT / UPDATE (edit) / soft-delete / presence / typing / leave
+node scripts/realtime-test.mjs
+
+# Row Level Security: anon, non-member access, cross-user tampering
+node scripts/rls-test.mjs
+```
+
+A clean repo must produce:
+
+- `npm run typecheck` — zero errors
+- `npm run lint` — zero errors, zero warnings
+- `npm run build` — clean production build, zero warnings
+- `node scripts/realtime-test.mjs` — 18/18 pass
+- `node scripts/rls-test.mjs` — 10/10 pass
 
 ---
 

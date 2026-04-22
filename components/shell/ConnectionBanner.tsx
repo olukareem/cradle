@@ -7,9 +7,15 @@ import { WifiOff } from 'lucide-react'
  * Shows a sticky banner at the top when the browser loses its network connection.
  * Uses the native `navigator.onLine` + `online`/`offline` events — no Supabase
  * dependency needed.
+ *
+ * Initial state is set via lazy useState initializer (runs once at mount, before
+ * first render) so we never call setState synchronously inside a useEffect body.
  */
 export function ConnectionBanner() {
-  const [offline, setOffline] = useState(false)
+  const [offline, setOffline] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    return !navigator.onLine
+  })
 
   useEffect(() => {
     function handleOffline() { setOffline(true) }
@@ -17,7 +23,6 @@ export function ConnectionBanner() {
 
     window.addEventListener('offline', handleOffline)
     window.addEventListener('online', handleOnline)
-    setOffline(!navigator.onLine)
 
     return () => {
       window.removeEventListener('offline', handleOffline)

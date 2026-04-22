@@ -12,7 +12,9 @@ interface TypingIndicatorProps {
  * Only shown when at least one other user is actively typing.
  */
 export function TypingIndicator({ typingUsers, currentUserId }: TypingIndicatorProps) {
-  const others = typingUsers.filter((u) => u.userId !== currentUserId && u.typing && u.typingUntil > Date.now())
+  // typingUntil guard is handled by usePresence's 3s timer; relying solely on
+  // the `typing` flag keeps render pure (no Date.now() impure call during render)
+  const others = typingUsers.filter((u) => u.userId !== currentUserId && u.typing)
 
   if (others.length === 0) return null
 

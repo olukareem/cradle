@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Hash, Plus, Compass } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { useSessionStore } from '@/lib/stores/session'
 import { useRoomsStore } from '@/lib/stores/rooms'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -22,6 +23,7 @@ interface SidebarContentProps {
 
 export function SidebarContent({ initialRooms }: SidebarContentProps) {
   const pathname = usePathname()
+  const { user } = useSessionStore()
   const { joinedRooms, setJoinedRooms, setActiveRoom, unreadCounts } = useRoomsStore()
   const [createOpen, setCreateOpen] = useState(false)
   const [browseOpen, setBrowseOpen] = useState(false)
@@ -39,6 +41,7 @@ export function SidebarContent({ initialRooms }: SidebarContentProps) {
 
   // Subscribe to room_members changes so sidebar updates in real time
   useEffect(() => {
+    if (!user) return
     const supabase = createClient()
     const channel = supabase
       .channel('sidebar:room_members')
@@ -46,10 +49,11 @@ export function SidebarContent({ initialRooms }: SidebarContentProps) {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'room_members' },
         () => {
-          // Refetch joined rooms when membership changes
+          // Refetch only the current user's memberships
           supabase
             .from('room_members')
             .select('rooms(*)')
+            .eq('user_id', user.id)
             .then(({ data }) => {
               if (data) {
                 const rooms = data.flatMap((m) => (m.rooms ? [m.rooms] : []))
@@ -63,7 +67,7 @@ export function SidebarContent({ initialRooms }: SidebarContentProps) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [setJoinedRooms])
+  }, [user, setJoinedRooms])
 
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-y-auto">
