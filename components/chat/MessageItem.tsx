@@ -88,6 +88,7 @@ export function MessageItem({ message, isLead }: MessageItemProps) {
             <span
               className="text-xs text-text-faint cursor-default"
               title={absoluteTime(message.created_at)}
+              suppressHydrationWarning
             >
               {shortTime(message.created_at)}
             </span>

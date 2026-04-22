@@ -44,10 +44,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# editor / AI tooling (kept local, never committed)
-CLAUDE.md
-AGENTS.md
-.claude/
+# editor tooling (kept local, never committed)
 .cursor/
 .cursorrules
 .aider*

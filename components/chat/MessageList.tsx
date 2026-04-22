@@ -181,7 +181,10 @@ export function MessageList({ roomId, initialMessages, oldestCreatedAt }: Messag
             {group.showDaySeparator && (
               <div className="flex items-center gap-3 px-4 my-4">
                 <div className="flex-1 h-px bg-border" />
-                <span className="shrink-0 text-xs font-medium text-text-faint">
+                <span
+                  className="shrink-0 text-xs font-medium text-text-faint"
+                  suppressHydrationWarning
+                >
                   {daySeparatorLabel(group.leadMessage.created_at)}
                 </span>
                 <div className="flex-1 h-px bg-border" />
